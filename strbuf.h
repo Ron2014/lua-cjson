@@ -25,6 +25,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#ifdef _MSC_VER
+int strcasecmp(char *s1, char *s2);
+int strncasecmp(char *s1, char *s2, register int n);
+#endif
+
 /* Size: Total bytes allocated to *buf
  * Length: String length, excluding optional NULL terminator.
  * Increment: Allocation increments when resizing the string buffer.
