@@ -54,12 +54,6 @@
 #define CJSON_VERSION   "2.1devel"
 #endif
 
-#ifdef _MSC_VER
-#define CJSON_EXPORT    __declspec(dllexport)
-#else
-#define CJSON_EXPORT    extern
-#endif
-
 /* Workaround for Solaris platforms missing isinf() */
 #if !defined(isinf) && (defined(USE_INTERNAL_ISINF) || defined(MISSING_ISINF))
 #define isinf(x) (!isnan(x) && isnan((x) - (x)))
@@ -145,7 +139,7 @@ typedef struct {
 
 typedef struct {
     json_token_type_t type;
-    int index;
+    ptrdiff_t index;
     union {
         const char *string;
         double number;
@@ -193,6 +187,10 @@ static const char *char2escape[256] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* ===== CONFIGURATION ===== */
 
 static json_config_t *json_fetch_config(lua_State *l)
@@ -228,7 +226,7 @@ static int json_integer_option(lua_State *l, int optindex, int *setting,
     int value;
 
     if (!lua_isnil(l, optindex)) {
-        value = luaL_checkinteger(l, optindex);
+        value = (int)luaL_checkinteger(l, optindex);
         snprintf(errmsg, sizeof(errmsg), "expected integer between %d and %d", min, max);
         luaL_argcheck(l, min <= value && value <= max, 1, errmsg);
         *setting = value;
@@ -467,9 +465,9 @@ static void json_encode_exception(lua_State *l, json_config_t *cfg, strbuf_t *js
 static void json_append_string(lua_State *l, strbuf_t *json, int lindex)
 {
     const char *escstr;
+    int i;
     const char *str;
     size_t len;
-    size_t i;
 
     str = lua_tolstring(l, lindex, &len);
 
@@ -477,7 +475,7 @@ static void json_append_string(lua_State *l, strbuf_t *json, int lindex)
      * This buffer is reused constantly for small strings
      * If there are any excess pages, they won't be hit anyway.
      * This gains ~5% speedup. */
-    strbuf_ensure_empty_length(json, len * 6 + 2);
+    strbuf_ensure_empty_length(json, (int)(len * 6 + 2));
 
     strbuf_append_char_unsafe(json, '\"');
     for (i = 0; i < len; i++) {
@@ -512,7 +510,7 @@ static int lua_array_length(lua_State *l, json_config_t *cfg, strbuf_t *json)
             /* Integer >= 1 ? */
             if (floor(k) == k && k >= 1) {
                 if (k > max)
-                    max = k;
+                    max = (int)k;
                 items++;
                 lua_pop(l, 1);
                 continue;
@@ -598,20 +596,12 @@ static void json_append_number(lua_State *l, json_config_t *cfg,
     if (cfg->encode_invalid_numbers == 0) {
         /* Prevent encoding invalid numbers */
         if (isinf(num) || isnan(num))
-            json_encode_exception(l, cfg, json, lindex,
-                                  "must not be NaN or Infinity");
+            json_encode_exception(l, cfg, json, lindex, "must not be NaN or Inf");
     } else if (cfg->encode_invalid_numbers == 1) {
-        /* Encode NaN/Infinity separately to ensure Javascript compatible
-         * values are used. */
+        /* Encode invalid numbers, but handle "nan" separately
+         * since some platforms may encode as "-nan". */
         if (isnan(num)) {
-            strbuf_append_mem(json, "NaN", 3);
-            return;
-        }
-        if (isinf(num)) {
-            if (num < 0)
-                strbuf_append_mem(json, "-Infinity", 9);
-            else
-                strbuf_append_mem(json, "Infinity", 8);
+            strbuf_append_mem(json, "nan", 3);
             return;
         }
     } else {
@@ -1286,7 +1276,7 @@ static int json_decode(lua_State *l)
     /* Ensure the temporary buffer can hold the entire string.
      * This means we no longer need to do length checks since the decoded
      * string must be smaller than the entire json string */
-    json.tmp = strbuf_new(json_len);
+    json.tmp = strbuf_new((int)json_len);
 
     json_next_token(&json, &token);
     json_process_value(l, &json, &token);
@@ -1413,7 +1403,7 @@ static int lua_cjson_safe_new(lua_State *l)
     return 1;
 }
 
-CJSON_EXPORT int luaopen_cjson(lua_State *l)
+int luaopen_cjson(lua_State *l)
 {
     lua_cjson_new(l);
 
@@ -1427,13 +1417,17 @@ CJSON_EXPORT int luaopen_cjson(lua_State *l)
     return 1;
 }
 
-CJSON_EXPORT int luaopen_cjson_safe(lua_State *l)
+int luaopen_cjson_safe(lua_State *l)
 {
     lua_cjson_safe_new(l);
 
     /* Return cjson.safe table */
     return 1;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 /* vi:ai et sw=4 ts=4:
  */
