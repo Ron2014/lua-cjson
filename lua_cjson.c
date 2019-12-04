@@ -40,11 +40,12 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-#include <lua.h>
 #include <lauxlib.h>
 
 #include "strbuf.h"
 #include "fpconv.h"
+
+#include "lua_cjson.h"
 
 #ifndef CJSON_MODNAME
 #define CJSON_MODNAME   "cjson"
@@ -186,10 +187,6 @@ static const char *char2escape[256] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* ===== CONFIGURATION ===== */
 
@@ -1424,10 +1421,6 @@ int luaopen_cjson_safe(lua_State *l)
     /* Return cjson.safe table */
     return 1;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 /* vi:ai et sw=4 ts=4:
  */
