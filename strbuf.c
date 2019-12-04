@@ -57,9 +57,9 @@ static void die(const char *fmt, ...)
 	exit(-1);
 }
 
-void strbuf_init(strbuf_t *s, int len)
+void strbuf_init(strbuf_t *s, size_t len)
 {
-	int size;
+	size_t size;
 
 	if (len <= 0)
 		size = STRBUF_DEFAULT_SIZE;
@@ -81,7 +81,7 @@ void strbuf_init(strbuf_t *s, int len)
 	strbuf_ensure_null(s);
 }
 
-strbuf_t *strbuf_new(int len)
+strbuf_t *strbuf_new(size_t len)
 {
 	strbuf_t *s;
 
@@ -110,7 +110,7 @@ void strbuf_set_increment(strbuf_t *s, int increment)
 static inline void debug_stats(strbuf_t *s)
 {
 	if (s->debug) {
-		fprintf(stderr, "strbuf(%p) reallocs: %d, length: %d, size: %d\n",
+		fprintf(stderr, "strbuf(%p) reallocs: %d, length: %zd, size: %zd\n",
 			s, s->reallocs, s->length, s->size);
 	}
 }
@@ -147,9 +147,9 @@ char *strbuf_free_to_string(strbuf_t *s, int *len)
 	return buf;
 }
 
-static int calculate_new_size(strbuf_t *s, int len)
+static size_t calculate_new_size(strbuf_t *s, size_t len)
 {
-	int reqsize, newsize;
+	size_t reqsize, newsize;
 
 	if (len <= 0)
 		die("BUG: Invalid strbuf length requested");
@@ -178,14 +178,14 @@ static int calculate_new_size(strbuf_t *s, int len)
 
 /* Ensure strbuf can handle a string length bytes long (ignoring NULL
 	* optional termination). */
-void strbuf_resize(strbuf_t *s, int len)
+void strbuf_resize(strbuf_t *s, size_t len)
 {
-	int newsize;
+	size_t newsize;
 
 	newsize = calculate_new_size(s, len);
 
 	if (s->debug > 1) {
-		fprintf(stderr, "strbuf(%p) resize: %d => %d\n",
+		fprintf(stderr, "strbuf(%p) resize: %zd => %zd\n",
 			s, s->size, newsize);
 	}
 
@@ -198,7 +198,7 @@ void strbuf_resize(strbuf_t *s, int len)
 
 void strbuf_append_string(strbuf_t *s, const char *str)
 {
-	int space, i;
+	size_t space, i;
 
 	space = strbuf_empty_length(s);
 
@@ -238,8 +238,8 @@ void strbuf_append_fmt(strbuf_t *s, int len, const char *fmt, ...)
 void strbuf_append_fmt_retry(strbuf_t *s, const char *fmt, ...)
 {
 	va_list arg;
-	int fmt_len, try;
-	int empty_len;
+	size_t fmt_len, try;
+	size_t empty_len;
 
 	/* If the first attempt to append fails, resize the buffer appropriately
 		* and try again */

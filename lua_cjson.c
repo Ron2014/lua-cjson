@@ -145,7 +145,7 @@ typedef struct {
         double number;
         int boolean;
     } value;
-    int string_len;
+    size_t string_len;
 } json_token_t;
 
 static const char *char2escape[256] = {
@@ -708,7 +708,7 @@ static int json_encode(lua_State *l)
     strbuf_t local_encode_buf;
     strbuf_t *encode_buf;
     char *json;
-    int len;
+    size_t len;
 
     luaL_argcheck(l, lua_gettop(l) == 1, 1, "expected 1 argument");
 
@@ -1276,7 +1276,7 @@ static int json_decode(lua_State *l)
     /* Ensure the temporary buffer can hold the entire string.
      * This means we no longer need to do length checks since the decoded
      * string must be smaller than the entire json string */
-    json.tmp = strbuf_new((int)json_len);
+    json.tmp = strbuf_new(json_len);
 
     json_next_token(&json, &token);
     json_process_value(l, &json, &token);

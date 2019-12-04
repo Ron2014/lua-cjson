@@ -33,8 +33,8 @@
 
 typedef struct {
     char *buf;
-    int size;
-    int length;
+	size_t size;
+    size_t length;
     int increment;
     int dynamic;
     int reallocs;
@@ -58,8 +58,8 @@ extern "C" {
 #endif
 
 	/* Initialise */
-	extern strbuf_t *strbuf_new(int len);
-	extern void strbuf_init(strbuf_t *s, int len);
+	extern strbuf_t *strbuf_new(size_t len);
+	extern void strbuf_init(strbuf_t *s, size_t len);
 	extern void strbuf_set_increment(strbuf_t *s, int increment);
 
 	/* Release */
@@ -67,12 +67,12 @@ extern "C" {
 	extern char *strbuf_free_to_string(strbuf_t *s, int *len);
 
 	/* Management */
-	extern void strbuf_resize(strbuf_t *s, int len);
+	extern void strbuf_resize(strbuf_t *s, size_t len);
 
-	static int strbuf_empty_length(strbuf_t *s);
-	static int strbuf_length(strbuf_t *s);
-	static char *strbuf_string(strbuf_t *s, int *len);
-	static void strbuf_ensure_empty_length(strbuf_t *s, int len);
+	static size_t strbuf_empty_length(strbuf_t *s);
+	static size_t strbuf_length(strbuf_t *s);
+	static char *strbuf_string(strbuf_t *s, size_t *len);
+	static void strbuf_ensure_empty_length(strbuf_t *s, size_t len);
 	static char *strbuf_empty_ptr(strbuf_t *s);
 	static void strbuf_extend_length(strbuf_t *s, int len);
 
@@ -99,12 +99,12 @@ extern "C" {
 
 	/* Return bytes remaining in the string buffer
 	 * Ensure there is space for a NULL terminator. */
-	static inline int strbuf_empty_length(strbuf_t *s)
+	static inline size_t strbuf_empty_length(strbuf_t *s)
 	{
 		return s->size - s->length - 1;
 	}
 
-	static inline void strbuf_ensure_empty_length(strbuf_t *s, int len)
+	static inline void strbuf_ensure_empty_length(strbuf_t *s, size_t len)
 	{
 		if (len > strbuf_empty_length(s))
 			strbuf_resize(s, s->length + len);
@@ -120,7 +120,7 @@ extern "C" {
 		s->length += len;
 	}
 
-	static inline int strbuf_length(strbuf_t *s)
+	static inline size_t strbuf_length(strbuf_t *s)
 	{
 		return s->length;
 	}
@@ -154,7 +154,7 @@ extern "C" {
 		s->buf[s->length] = 0;
 	}
 
-	static inline char *strbuf_string(strbuf_t *s, int *len)
+	static inline char *strbuf_string(strbuf_t *s, size_t *len)
 	{
 		if (len)
 			*len = s->length;
