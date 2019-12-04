@@ -71,11 +71,17 @@ endif()
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-Dinline=__inline)
-    add_definitions(-Dsnprintf=_snprintf)
+    #add_definitions(-Dsnprintf=_snprintf)
     add_definitions(-Dstrncasecmp=_strnicmp)
 endif()
 
+# 在使用dyld的系统有效，如果不支持dyld，则被当作SHARED对待。
+# 因此，windows平台会生成cjson.dll，根据lua规则，需要将luaopen_xxx导出
 add_library(cjson MODULE lua_cjson.c strbuf.c ${FPCONV_SOURCES})
+if(WIN32)
+	add_definitions(-DLUA_BUILD_AS_DLL)
+	add_definitions(-DLUA_LIB)
+endif()
 set_target_properties(cjson PROPERTIES PREFIX "")
 target_link_libraries(cjson ${_MODULE_LINK})
 install(TARGETS cjson DESTINATION "${_lua_module_dir}")
